@@ -82,6 +82,8 @@ int main() {
         for(i; i < sizeof(outputBinario); i++) outputBinario[i] = '0';
         outputBinario[sizeof(outputBinario)-1] = '\0';
 
+        //ERRO: VOCE ESTA PEGANDO O CODIGO BINARIO DE ACORDO COM A ORDEM DA LEGENDA, MAS VOCE TEM QUE TRADUZIR O TEXTO COM A LEGENDA E ASSIM VAI TER O CODIGO BINARIO E DEPOIS VOCE USA A FUNCAO ABAIXO
+
         //Transforma a saída binaria em letras
         for (i = 0, j = 0; outputBinario[i] != '\0'; i++)
         {
@@ -91,6 +93,7 @@ int main() {
             {
                 vet[j] = '\0';
                 j = 0;
+                cout << strtol(vet, NULL, 2) << endl;
                 fprintf(arquivoOut, "%c", (char)strtol(vet, NULL, 2));
             }
         }
