@@ -3,6 +3,7 @@
 #include <string.h>
 #include <vector>
 #include <cmath> 
+#include <typeinfo>
 
 FILE* arquivoOut = fopen("out.txt", "w");
 FILE* arquivoIn = fopen("input.txt", "r");
@@ -31,7 +32,7 @@ void updateRep(vector<No*>& R, int index);
 Rep* criarRep();
 void reordenarRep(vector<No*>& R);
 void createNoOfTree(vector<No*>& nosVet);
-void legendTree(string* outBin, string texto, No** r);
+void legendTree(string* outLeg, string texto, No** r);
 
 int main() {
     #if defined(_WIN32) || defined(_WIN64)
@@ -46,8 +47,9 @@ int main() {
     {
         char texto[3000], vet[9];
         int tamChar = fread(texto, sizeof(char), sizeof(texto), arquivoIn);
+        texto[tamChar] = '\0';
         vector<No*> nosRepeticoes;
-        string outputBin, auxTexto;
+        string outputLeg, auxTexto, outputBin;
         int resto, restoBin, i, j;
     
         //Criar lista de nós/repetições para cada letra
@@ -68,42 +70,70 @@ int main() {
         //Fazer arvore com todos as folhas
         while(nosRepeticoes.size() > 1) createNoOfTree(nosRepeticoes);
         
-        //Cria a legenda da compactação
-        legendTree(&outputBin, auxTexto, &nosRepeticoes[0]);
+        //Cria a legenda da compactação e escreve ela no arquivo de saída.
+        legendTree(&outputLeg, auxTexto, &nosRepeticoes[0]);
         fprintf(arquivoOut, "\a");
 
-        //Inteira com zeros a saida binaria, até ser multiplo de oito
-        resto = outputBin.size()/8;
-        if(resto) restoBin = abs(outputBin.size()-(resto*8));
-        else restoBin = outputBin.size()-8;
-        char outputBinario[outputBin.size()+1+abs(restoBin)];
-        
-        for(i = 0; i < outputBin.size(); i++) outputBinario[i] = outputBin[i];
-        for(i; i < sizeof(outputBinario); i++) outputBinario[i] = '0';
-        outputBinario[sizeof(outputBinario)-1] = '\0';
+        cout << outputLeg;
 
-        //ERRO: VOCE ESTA PEGANDO O CODIGO BINARIO DE ACORDO COM A ORDEM DA LEGENDA, MAS VOCE TEM QUE TRADUZIR O TEXTO COM A LEGENDA E ASSIM VAI TER O CODIGO BINARIO E DEPOIS VOCE USA A FUNCAO ABAIXO
+        string path;
+        int nextIsLetter = 0, indexPath = 0;
+
+        // for (i = 0; texto[i] != '\0'; i++)
+        // {
+        //     for (j = 0; outputLeg[j] != '\0'; j++)
+        //     {
+        //         if(outputLeg[j] == 45)
+        //         {   
+        //             path.push_back('\0');
+        //             nextIsLetter = 1;
+        //             // printf("1: %s %c|\n", path, outputLeg[j]);
+        //         }
+        //         else if(!nextIsLetter && outputLeg[j] != '\n')
+        //         {
+        //             path.push_back(outputLeg[j]);
+        //             printf("2: %c|\n", outputLeg[j]);
+        //         }
+        //         else if(nextIsLetter)
+        //         {
+        //             if(texto[i] == outputLeg[j])
+        //             {
+        //                 // printf("3: %c %c|\n", texto[i], outputLeg[j]);
+        //                 // printf("3: %s!\n", path);
+
+        //                 for(int m = 0; path[m] != '\0'; m++) outputBin.push_back(path[m]);
+        //                 nextIsLetter = 0;
+        //                 path.clear();
+        //             }
+        //         }
+        //     }    
+        // }
+
+        for(i = 0; outputBin[i] != '\0'; i++)
+        {
+            cout << outputBin[i];
+        }
 
         //Transforma a saída binaria em letras
-        for (i = 0, j = 0; outputBinario[i] != '\0'; i++)
-        {
-            vet[j] = outputBinario[i];
-            j++;
-            if (j == 8)
-            {
-                vet[j] = '\0';
-                j = 0;
-                cout << strtol(vet, NULL, 2) << endl;
-                fprintf(arquivoOut, "%c", (char)strtol(vet, NULL, 2));
-            }
-        }
+        // for (i = 0, j = 0; outputLegario[i] != '\0'; i++)
+        // {
+        //     vet[j] = outputLegario[i];
+        //     j++;
+        //     if (j == 8)
+        //     {
+        //         vet[j] = '\0';
+        //         j = 0;
+        //         // cout << strtol(vet, NULL, 2) << endl;
+        //         // fprintf(arquivoOut, "%c", (char)strtol(vet, NULL, 2));
+        //     }
+        // }
 
         fclose(arquivoIn);
         fclose(arquivoOut);
     }
 }
 
-void legendTree(string* outBin, string texto, No** r) {
+void legendTree(string* outLeg, string texto, No** r) {
     if(*r != NULL)
     {
         if((*r)->direcao != RAIZ)
@@ -113,8 +143,8 @@ void legendTree(string* outBin, string texto, No** r) {
 
             if((*r)->esq != NULL || (*r)->dir != NULL)
             {
-                legendTree(outBin, texto, &(*r)->esq);
-                legendTree(outBin, texto, &(*r)->dir);
+                legendTree(outLeg, texto, &(*r)->esq);
+                legendTree(outLeg, texto, &(*r)->dir);
             }
             else
             {
@@ -124,13 +154,16 @@ void legendTree(string* outBin, string texto, No** r) {
                 }
                 fprintf(arquivoOut, "-%i%c", (*r)->word->word, 11);
 
-                *outBin += texto;
+                *outLeg += texto;
+                outLeg->push_back('-');
+                outLeg->push_back((*r)->word->word);
+                outLeg->push_back('\n');
             }
         }
         else 
         {
-            legendTree(outBin, texto, &(*r)->esq);
-            legendTree(outBin, texto, &(*r)->dir);
+            legendTree(outLeg, texto, &(*r)->esq);
+            legendTree(outLeg, texto, &(*r)->dir);
         }
     }
 }
