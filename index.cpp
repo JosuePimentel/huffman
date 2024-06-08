@@ -25,6 +25,13 @@ typedef struct no
     DIRECAO direcao;
 }No;
 
+typedef struct lista
+{
+    char caracter;
+    char* path;
+    struct lista* next;
+}Lista;
+
 int menu();
 No* insertBeginNewRep(char word);
 No* criarNo();
@@ -32,7 +39,7 @@ void updateRep(vector<No*>& R, int index);
 Rep* criarRep();
 void reordenarRep(vector<No*>& R);
 void createNoOfTree(vector<No*>& nosVet);
-void legendTree(string* outLeg, string texto, No** r);
+void legendTree(Lista** l, string texto, No** r);
 
 int main() {
     #if defined(_WIN32) || defined(_WIN64)
@@ -51,6 +58,7 @@ int main() {
         vector<No*> nosRepeticoes;
         string outputLeg, auxTexto, outputBin;
         int resto, restoBin, i, j;
+        Lista* l = NULL;
     
         //Criar lista de nós/repetições para cada letra
         for(int i = 0; i < tamChar; i++)
@@ -71,69 +79,33 @@ int main() {
         while(nosRepeticoes.size() > 1) createNoOfTree(nosRepeticoes);
         
         //Cria a legenda da compactação e escreve ela no arquivo de saída.
-        legendTree(&outputLeg, auxTexto, &nosRepeticoes[0]);
+        legendTree(&l, auxTexto, &nosRepeticoes[0]);
         fprintf(arquivoOut, "\a");
 
-        cout << outputLeg;
-
-        string path;
-        int nextIsLetter = 0, indexPath = 0;
-
-        // for (i = 0; texto[i] != '\0'; i++)
-        // {
-        //     for (j = 0; outputLeg[j] != '\0'; j++)
-        //     {
-        //         if(outputLeg[j] == 45)
-        //         {   
-        //             path.push_back('\0');
-        //             nextIsLetter = 1;
-        //             // printf("1: %s %c|\n", path, outputLeg[j]);
-        //         }
-        //         else if(!nextIsLetter && outputLeg[j] != '\n')
-        //         {
-        //             path.push_back(outputLeg[j]);
-        //             printf("2: %c|\n", outputLeg[j]);
-        //         }
-        //         else if(nextIsLetter)
-        //         {
-        //             if(texto[i] == outputLeg[j])
-        //             {
-        //                 // printf("3: %c %c|\n", texto[i], outputLeg[j]);
-        //                 // printf("3: %s!\n", path);
-
-        //                 for(int m = 0; path[m] != '\0'; m++) outputBin.push_back(path[m]);
-        //                 nextIsLetter = 0;
-        //                 path.clear();
-        //             }
-        //         }
-        //     }    
-        // }
-
-        for(i = 0; outputBin[i] != '\0'; i++)
+        for(i = 0; texto[i] != '\0'; i++)
         {
-            cout << outputBin[i];
+            for(Lista* p = l; p != NULL; p = p->next)
+            {
+                if(p->caracter == texto[i])
+                {
+                    // printf("%s", p->path);
+                    for(j = 0; j < sizeof(p->path); j++)
+                    {
+                        outputBin.push_back(*p->path);
+                    }
+                    break;
+                }
+            }
         }
 
-        //Transforma a saída binaria em letras
-        // for (i = 0, j = 0; outputLegario[i] != '\0'; i++)
-        // {
-        //     vet[j] = outputLegario[i];
-        //     j++;
-        //     if (j == 8)
-        //     {
-        //         vet[j] = '\0';
-        //         j = 0;
-        //         // cout << strtol(vet, NULL, 2) << endl;
-        //         // fprintf(arquivoOut, "%c", (char)strtol(vet, NULL, 2));
-        //     }
-        // }
+        printf("%s", outputBin);
 
         fclose(arquivoIn);
         fclose(arquivoOut);
     }
 }
 
-void legendTree(string* outLeg, string texto, No** r) {
+void legendTree(Lista** l, string texto, No** r) {
     if(*r != NULL)
     {
         if((*r)->direcao != RAIZ)
@@ -143,8 +115,8 @@ void legendTree(string* outLeg, string texto, No** r) {
 
             if((*r)->esq != NULL || (*r)->dir != NULL)
             {
-                legendTree(outLeg, texto, &(*r)->esq);
-                legendTree(outLeg, texto, &(*r)->dir);
+                legendTree(&(*l), texto, &(*r)->esq);
+                legendTree(&(*l), texto, &(*r)->dir);
             }
             else
             {
@@ -154,16 +126,31 @@ void legendTree(string* outLeg, string texto, No** r) {
                 }
                 fprintf(arquivoOut, "-%i%c", (*r)->word->word, 11);
 
-                *outLeg += texto;
-                outLeg->push_back('-');
-                outLeg->push_back((*r)->word->word);
-                outLeg->push_back('\n');
+                Lista* novo = (Lista*)malloc(sizeof(Lista));
+                novo->caracter = (*r)->word->word;
+                novo->path = (char*)malloc(texto.size());
+                for (int i = 0; i < sizeof(novo->path); i++)
+                {
+                    novo->path[i] = texto[i];
+                }
+                novo->next = NULL;
+
+                if(*l != NULL)
+                {
+                    Lista* p;
+                    for(p = *l; p->next != NULL; p = p->next);
+                    p->next = novo;
+                }
+                else
+                {
+                    *l = novo;
+                }
             }
         }
         else 
         {
-            legendTree(outLeg, texto, &(*r)->esq);
-            legendTree(outLeg, texto, &(*r)->dir);
+            legendTree(&(*l), texto, &(*r)->esq);
+            legendTree(&(*l), texto, &(*r)->dir);
         }
     }
 }
