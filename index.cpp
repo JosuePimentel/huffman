@@ -60,7 +60,7 @@ int main() {
         int resto, restoBin, i, j;
         Lista* l = NULL;
     
-        //Criar lista de nós/repetições para cada letra
+        // Criar lista de nós/repetições para cada letra
         for(int i = 0; i < tamChar; i++)
         {
           char caracter = texto[i];
@@ -75,10 +75,10 @@ int main() {
           }
         }
 
-        //Fazer arvore com todos as folhas
+        // Fazer arvore com todos as folhas
         while(nosRepeticoes.size() > 1) createNoOfTree(nosRepeticoes);
         
-        //Cria a legenda da compactação e escreve ela no arquivo de saída.
+        // Cria a legenda da compactação e escreve ela no arquivo de saída.
         legendTree(&l, auxTexto, &nosRepeticoes[0]);
         fprintf(arquivoOut, "\a");
 
@@ -88,20 +88,46 @@ int main() {
             {
                 if(p->caracter == texto[i])
                 {
-                    // printf("%s", p->path);
-                    for(j = 0; j < sizeof(p->path); j++)
-                    {
-                        outputBin.push_back(*p->path);
-                    }
+                    for(j = 0; p->path[j] != '\0'; j++) outputBin.push_back(p->path[j]);
                     break;
                 }
             }
         }
+        outputBin.push_back('\0');
 
-        printf("%s", outputBin);
+        // Converte o binario em decimal e depois em char
+        size_t tamOutputBin = outputBin.size();
+        for (i = 0, j = 0; i < tamOutputBin-1; i++)
+        {
+            vet[j] = outputBin[i];
 
+            if (outputBin[i+1] == '\0' && j < 7)
+            {   
+                while (j < 7)
+                {
+                    vet[j] = '0';
+                    j++;
+                }
+            }
+
+            j++;
+
+            if (j == 8)
+            {
+                vet[8] = '\0';
+                j = 0;
+                // printf("%c", (char)strtol(vet, NULL, 2));
+                fprintf(arquivoOut, "%c", (char)strtol(vet, NULL, 2));
+            }
+
+        }
+
+        printf("Arquivo compactado, olhe o arquivo de saida (out.txt).\n");
         fclose(arquivoIn);
         fclose(arquivoOut);
+    }
+    else {
+       printf("oi\n"); 
     }
 }
 
@@ -128,11 +154,13 @@ void legendTree(Lista** l, string texto, No** r) {
 
                 Lista* novo = (Lista*)malloc(sizeof(Lista));
                 novo->caracter = (*r)->word->word;
-                novo->path = (char*)malloc(texto.size());
-                for (int i = 0; i < sizeof(novo->path); i++)
+                novo->path = (char*)malloc(texto.size()+1);
+                int i;
+                for (i = 0; i < sizeof(novo->path); i++)
                 {
                     novo->path[i] = texto[i];
                 }
+                novo->path[i] = '\0';
                 novo->next = NULL;
 
                 if(*l != NULL)
@@ -156,16 +184,16 @@ void legendTree(Lista** l, string texto, No** r) {
 }
 
 void createNoOfTree(vector<No*>& nosVet) {
-    //Pegando os dois primeiros nos do vector
+    // Pegando os dois primeiros nos do vector
     No* r1 = nosVet[0];
     No* r2 = nosVet[1];
 
-    //Criando repeticao de r12
+    // Criando repeticao de r12
     Rep* rep = criarRep();
     rep->repeticao = (r1->word->repeticao + r2->word->repeticao);
     rep->word = '\0'; 
 
-    //Criando raiz r12
+    // Criando raiz r12
     No* r12 = criarNo();
     r12->direcao = RAIZ;
 
@@ -176,14 +204,14 @@ void createNoOfTree(vector<No*>& nosVet) {
     r2->direcao = ESQUERDA;
     r12->word = rep;
 
-    //Exclui as raizes  que foram juntadas
+    // Exclui as raizes  que foram juntadas
     nosVet.erase(nosVet.begin());
     nosVet.erase(nosVet.begin());
 
-    //Inclui o no raiz criado na lista de Nós
+    // Inclui o no raiz criado na lista de Nós
     nosVet.push_back(r12);
 
-    //Reordena a Lista de repetições
+    // Reordena a Lista de repetições
     reordenarRep(nosVet);
 }
 
@@ -228,7 +256,9 @@ void updateRep(vector<No*>& R, int index) {
 
 int menu() {
     int opc;
-    cout << "Voce quer codificar[01] ou decodificar[02] um teto?" << endl;
+    cout << "[00] Sair\n[01] Compactar\n[02] Descompactar\n" << endl;
     cin >> opc;
+
+    if(!opc) exit(0);
     return opc;
 }
